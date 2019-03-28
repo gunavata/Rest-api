@@ -9,7 +9,7 @@ exports.getPosts = (req, res, next) => {
         .then(posts => {
             res.status(200).json({
                 message: 'Fetched post successfully!',
-                post: posts
+                posts: posts
             })
         })
         .catch(err => {
@@ -27,17 +27,19 @@ exports.createPost = (req, res, next) => {
         error.statusCode = 422;
         throw error;
     }
+    const imageUrl = req.file.path;
     const title = req.body.title;
     const content = req.body.content;
-    console.log(title, content)
     const post = new Post({
             title: title,
             content: content,
-            imageUrl: 'images/Bongocrab.jpg',
+            imageUrl: imageUrl,
             creator: {
                 name: 'Bow'
             },
-        }).save()
+        });
+        post
+        .save()
         .then(result => {
             res.status(201).json({
                 message: 'Post created successfully!',
