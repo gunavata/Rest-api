@@ -22,14 +22,20 @@ exports.getPosts = (req, res, next) => {
 
 exports.createPost = (req, res, next) => {
     const errors = validationResult(req);
+    console.log(req)
     if (!errors.isEmpty()) {
         const error = new Error('Validation failed, entered data is incorrect!')
         error.statusCode = 422;
         throw error;
     }
-    const imageUrl = req.file.path;
+    if (!req.file) {
+        const error = new Error('No image found!');
+        error.statusCode = 422;
+        throw error;
+    }
     const title = req.body.title;
     const content = req.body.content;
+    const imageUrl = req.file.path;
     const post = new Post({
             title: title,
             content: content,
