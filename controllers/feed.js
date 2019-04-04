@@ -5,35 +5,31 @@ const {
     validationResult
 } = require('express-validator/check')
 
+const io = require('../socket')
 const Post = require('../models/post')
 const User = require('../models/user')
 
-exports.getPosts = (req, res, next) => {
+exports.getPosts = async (req, res, next) => {
     const currentPage = req.query.page || 1;
     const perPage = 2;
-    let totalItems;
-    Post.find()
-        .countDocuments()
-        .then(count => {
-            totalItems = count;
-            return Post.find()
-                .skip((currentPage - 1) * perPage)
-                .limit(perPage)
+    try {
+        const totalItems = await Post.find().countDocuments()
+        const posts = await Post.find()
+            .populate('creator')
+            .sort({createdAt: -1})
+            .skip((currentPage - 1) * perPage)
+            .limit(perPage)
+        res.status(200).json({
+            message: 'Fetched post successfully!',
+            posts: posts,
+            totalItems: totalItems
         })
-        .then(posts => {
-            res.status(200).json({
-                message: 'Fetched post successfully!',
-                posts: posts,
-                totalItems: totalItems
-            })
-        })
-        .catch(err => {
-            if (!err.statusCode) {
-                err.statusCode = 500;
-            }
-            next(err)
-        })
-
+    } catch (err) {
+        if (!err.statusCode) {
+            err.statusCode = 500;
+        }
+        next(err);
+    }
 };
 
 exports.createPost = (req, res, next) => {
@@ -69,10 +65,25 @@ exports.createPost = (req, res, next) => {
             return user.save()
         })
         .then(result => {
+            io.getIO().emit('posts', {
+                action: 'create',
+                post: {
+                    ...post._doc,
+                    creator: {
+                        _id: req.userId,
+                        name: user.name
+                    }
+                }
+            })
+        })
+        .then(result => {
             res.status(201).json({
                 message: 'Post created successfully!',
                 post: post,
-                creator: {_id: creator._id, name: creator.name}
+                creator: {
+                    _id: creator._id,
+                    name: creator.name
+                }
             })
         })
         .catch(err => {
@@ -124,14 +135,14 @@ exports.updatePost = (req, res, next) => {
         error.statusCode = 422;
         throw error;
     }
-    Post.findById(postId)
+    Post.findById(postId).populate('creator')
         .then(post => {
             if (!post) {
                 const error = new Error('Could not find post!')
                 error.statusCode = 404;
                 throw error;
             }
-            if (post.creator.toString() !== req.userId) {
+            if (post.creator._id.toString() !== req.userId) {
                 const error = new Error('Not authorized!');
                 error.statusCode = 403;
                 throw error;
@@ -145,7 +156,11 @@ exports.updatePost = (req, res, next) => {
             return post.save();
         })
         .then(result => {
-            res.status(200).json({
+            io.getIO().emit('posts', {
+                action: 'update',
+                post: result
+            })
+            return res.status(200).json({
                 message: 'Post updated!',
                 post: result
             })
@@ -184,6 +199,7 @@ exports.deletePost = (req, res, next) => {
             return user.save();
         })
         .then(result => {
+            io.getIO().emit('posts', {action: 'delete', post: postId})
             res.status(200).json({
                 message: 'Deleted post!'
             })
