@@ -46,7 +46,8 @@ exports.createPost = (req, res, next) => {
     }
     const title = req.body.title;
     const content = req.body.content;
-    const imageUrl = req.file.path;
+    const imageUrl = req.file.path.replace(/\\/g, "/");
+    console.log("imageUrl = " + imageUrl)
     let creator;
     const post = new Post({
         title: title,
