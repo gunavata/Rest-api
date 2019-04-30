@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const multer = require('multer');
 const graphqlHttp = require('express-graphql')
+const helmet = require('helmet');
+const compression = require('compression');
 
 const graphqlSchema = require('./graphql/schema')
 const graphqlResolver = require('./graphql/resolvers')
@@ -34,7 +36,7 @@ const fileStorage = multer.diskStorage({
     }
   };
 
-const MONGO_URI = 'mongodb+srv://pahtfinder:Q0GiMNn9yRBiZHiJ@thebowwowers-bl6ui.gcp.mongodb.net/messages'
+const MONGO_URI = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@thebowwowers-bl6ui.gcp.mongodb.net/${process.env.MONGO_DATABASE}`;
 
 // app.use(bodyParser.urlenconded()); // x-www-form-urlencoded <form>
 app.use(bodyParser.json()); //application/json
@@ -83,6 +85,9 @@ app.use('/graphql', graphqlHttp({
   }
 }))
 
+app.use(helmet());
+app.use(compression());
+
 app.use((error, req, res, next) => {
     console.log(error);
     const status = error.statusCode || 500;
@@ -93,7 +98,7 @@ app.use((error, req, res, next) => {
 
 mongoose.connect(MONGO_URI)
 .then(result => {
-    app.listen(8080);
+    app.listen(process.env.PORT || 3000);
 })
 .catch(err => console.log(err))
 

@@ -1,0 +1,7 @@
+{
+    "env": {
+        "MONGO_USER": "pahtfinder",
+        "MONGO_PASSWORD": "Q0GiMNn9yRBiZHiJ",
+        "MONGO_DATABASE": "messages"
+    }
+}
