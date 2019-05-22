@@ -11,7 +11,7 @@ const User = require('../models/user')
 
 exports.getPosts = async (req, res, next) => {
     const currentPage = req.query.page || 1;
-    const perPage = 2;
+    const perPage = 3;
     try {
         const totalItems = await Post.find().countDocuments()
         const posts = await Post.find()
