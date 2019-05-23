@@ -11,6 +11,6 @@ Front end for the deployed application!
 https://react-app-practicenodejs.herokuapp.com/
 
 
-REST-API deployed location! (No front end, WIP to redirect to front end!\
+REST-API deployed location! (No front end, WIP to redirect to front end!)
 
 https://rest-api-nodejspractice.herokuapp.com/
